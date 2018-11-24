@@ -4,6 +4,7 @@
 #include <QResizeEvent>
 #include <QScrollBar>
 #include <QTimer>
+#include <QtMath>
 
 ImageView::ImageView(QWidget *p):
     QAbstractScrollArea(p),
@@ -44,21 +45,23 @@ void ImageView::setImage(QImage *i)
 
 void ImageView::setZoomFit()
 {
+    qreal z;
 
-    // TODO: figure out how to stop the oscillating
-    if (m_image)
+    if (image())
     {
-        if (m_image->width() > m_image->height())
+        // Check scale by width first.
+        z = qreal(viewport()->width()) / qreal(image()->width());
+
+        // Scaled by width, height is still outside of bounds of viewport.
+        if (qFloor(image()->height() * z) > viewport()->height())
         {
-            setZoom(qreal(viewport()->width()) / qreal(m_image->width()));
-        }
-        else
-        {
-            setZoom(qreal(viewport()->height() / qreal(m_image->height())));
+            z = qreal(viewport()->height()) / qreal(image()->height());
         }
 
-        m_zoomfit = true;
+        setZoom(z);
     }
+
+    m_zoomfit = true;
 }
 
 void ImageView::setZoomFull()
@@ -75,17 +78,17 @@ void ImageView::setZoom(qreal z)
 {
     if (z > 0.0)
     {
-        int new_x = int(horizontalScrollBar()->value() / m_zoom * z);
-        int new_y = int(verticalScrollBar()->value() / m_zoom * z);
+        auto new_x = qFloor(horizontalScrollBar()->value() / zoom() * z);
+        auto new_y = qFloor(verticalScrollBar()->value() / zoom() * z);
 
         m_zoom = z;
+
+        viewport()->update();
 
         updateScrollBars();
 
         horizontalScrollBar()->setValue(new_x);
         verticalScrollBar()->setValue(new_y);
-
-        viewport()->update();
 
         m_zoomfit = false;
 
@@ -95,10 +98,10 @@ void ImageView::setZoom(qreal z)
 
 void ImageView::updateScrollBars()
 {
-    if (m_image)
+    if (image())
     {
-        horizontalScrollBar()->setRange(0, int(m_image->width() * m_zoom) - viewport()->width());
-        verticalScrollBar()->setRange(0, int(m_image->height() * m_zoom) - viewport()->height());
+        horizontalScrollBar()->setRange(0, qFloor(image()->width() * zoom()) - viewport()->width());
+        verticalScrollBar()->setRange(0, qFloor(image()->height() * zoom()) - viewport()->height());
     }
 }
 
@@ -110,25 +113,25 @@ void ImageView::paintEvent(QPaintEvent *e)
 
     p.fillRect(e->rect(), Qt::gray);
 
-    if (m_image)
+    if (image())
     {
-        QRect s_rect(int(horizontalScrollBar()->value() / m_zoom),
-                     int(verticalScrollBar()->value() / m_zoom),
-                     int(e->rect().width() / m_zoom),
-                     int(e->rect().height() / m_zoom));
+        QRect s_rect(qFloor(horizontalScrollBar()->value() / zoom()),
+                     qFloor(verticalScrollBar()->value() / zoom()),
+                     qFloor(e->rect().width() / zoom()),
+                     qFloor(e->rect().height() / zoom()));
 
         QRect d_rect = e->rect();
 
-        if (d_rect.width() - (m_image->width() * m_zoom) > 0)
+        if (d_rect.width() - (image()->width() * zoom()) > 0)
         {
-            d_rect.moveLeft((d_rect.width() - int(m_image->width() * m_zoom))/2);
+            d_rect.moveLeft((d_rect.width() - qFloor(image()->width() * zoom()))/2);
         }
-        if (d_rect.height() - m_image->height() * m_zoom > 0)
+        if (d_rect.height() - image()->height() * zoom() > 0)
         {
-            d_rect.moveTop((d_rect.height() - int(m_image->height() * m_zoom))/2);
+            d_rect.moveTop((d_rect.height() - qFloor(image()->height() * zoom()))/2);
         }
 
-        p.drawImage(d_rect, *m_image, s_rect);
+        p.drawImage(d_rect, *image(), s_rect);
     }
 
     e->accept();
@@ -136,6 +139,7 @@ void ImageView::paintEvent(QPaintEvent *e)
 
 void ImageView::resizeEvent(QResizeEvent *e)
 {
+
     QAbstractScrollArea::resizeEvent(e);
 
     // Only resize after the timeout of no resize events.
@@ -146,13 +150,13 @@ void ImageView::resizeEvent(QResizeEvent *e)
 
 void ImageView::resizeTimeout()
 {
-    if (m_image)
-    {
-        updateScrollBars();
-    }
-
     if (m_zoomfit)
     {
         setZoomFit();
+    }
+
+    if (image())
+    {
+        updateScrollBars();
     }
 }
