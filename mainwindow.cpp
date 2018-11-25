@@ -9,11 +9,12 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
-      m_view(new ImageView)
+      m_view(new ImageView(this))
 {
     setCentralWidget(m_view);
     setAcceptDrops(true);
     resize(800,600);
+    m_view->setZoomHint(ImageView::Fit);
 
     connect(m_view, &ImageView::imageChanged, this, &MainWindow::imageChanged);
     connect(m_view, &ImageView::zoomChanged, this, &MainWindow::zoomChanged);
@@ -60,7 +61,6 @@ void MainWindow::dropEvent(QDropEvent *e)
             QImage *i = new QImage(path);
             m_currentpath = path;
             m_view->setImage(i);
-            m_view->setZoomFit();
         }
 
         e->accept();

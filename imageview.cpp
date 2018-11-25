@@ -5,12 +5,14 @@
 #include <QScrollBar>
 #include <QTimer>
 #include <QtMath>
+#include <limits>
 
 ImageView::ImageView(QWidget *p):
     QAbstractScrollArea(p),
     m_image(nullptr),
     m_resizetimer(new QTimer(this)),
-    m_zoom(1.0)
+    m_zoom(1.0),
+    m_zoomhint(ImageView::Isometric)
 {
     connect(m_resizetimer, &QTimer::timeout, this, &ImageView::resizeTimeout);
 }
@@ -21,31 +23,35 @@ ImageView::~ImageView()
     delete m_resizetimer;
 }
 
-const QImage *ImageView::image()
+const QImage *ImageView::image() const
 {
     return m_image;
 }
 
-void ImageView::setImage(QImage *i)
+qreal ImageView::zoom() const
+{
+    return m_zoom;
+}
+
+ImageView::ZoomHint ImageView::zoomHint() const
+{
+    return m_zoomhint;
+}
+
+void ImageView::setImage(const QImage *i)
 {
     delete m_image;
-    m_image = i;
-
-    if(m_zoomfit)
-    {
-        setZoomFit();
-    }
-    else
-    {
-        setZoom(m_zoom);
-    }
-
+    m_image = const_cast<QImage *>(i);
+    m_updateScrollBars();
+    horizontalScrollBar()->setValue(0);
+    verticalScrollBar()->setValue(0);
+    viewport()->update();
     emit imageChanged(m_image);
 }
 
-void ImageView::setZoomFit()
+qreal ImageView::m_zoomFitFactor()
 {
-    qreal z;
+    qreal z = 1.0;
 
     if (image())
     {
@@ -57,46 +63,61 @@ void ImageView::setZoomFit()
         {
             z = qreal(viewport()->height()) / qreal(image()->height());
         }
-
-        setZoom(z);
     }
 
-    m_zoomfit = true;
-}
-
-void ImageView::setZoomFull()
-{
-    setZoom(1.0);
-}
-
-qreal ImageView::zoom()
-{
-    return m_zoom;
+    return z;
 }
 
 void ImageView::setZoom(qreal z)
 {
-    if (z > 0.0)
+    if ((z > 0.0) && image())
     {
         auto new_x = qFloor(horizontalScrollBar()->value() / zoom() * z);
         auto new_y = qFloor(verticalScrollBar()->value() / zoom() * z);
 
         m_zoom = z;
 
-        updateScrollBars();
+        m_updateScrollBars();
 
         viewport()->update();
 
         horizontalScrollBar()->setValue(new_x);
         verticalScrollBar()->setValue(new_y);
 
-        m_zoomfit = false;
-
-        emit zoomChanged(m_zoom);
+        emit zoomChanged(z);
     }
 }
 
-void ImageView::updateScrollBars()
+void ImageView::setZoomHint(ImageView::ZoomHint h)
+{
+    if (zoomHint() != h)
+    {
+        qreal z = zoom();
+
+        switch(h)
+        {
+            case Isometric:
+                z = 1.0;
+                break;
+            case Fit:
+                z = m_zoomFitFactor();
+                break;
+            case Absolute:
+                break;
+        }
+
+        m_zoomhint = h;
+
+        emit zoomHintChanged(h);
+
+        if (qFabs(zoom() - z) > std::numeric_limits<qreal>::epsilon())
+        {
+            setZoom(z);
+        }
+    }
+}
+
+void ImageView::m_updateScrollBars()
 {
     if (image())
     {
@@ -156,13 +177,13 @@ void ImageView::resizeEvent(QResizeEvent *e)
 
 void ImageView::resizeTimeout()
 {
-    if (m_zoomfit)
+    if (zoomHint() == ImageView::Fit)
     {
-        setZoomFit();
+        setZoom(m_zoomFitFactor());
     }
 
     if (image())
     {
-        updateScrollBars();
+        m_updateScrollBars();
     }
 }
