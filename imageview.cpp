@@ -83,9 +83,9 @@ void ImageView::setZoom(qreal z)
 
         m_zoom = z;
 
-        viewport()->update();
-
         updateScrollBars();
+
+        viewport()->update();
 
         horizontalScrollBar()->setValue(new_x);
         verticalScrollBar()->setValue(new_y);
@@ -103,6 +103,11 @@ void ImageView::updateScrollBars()
         horizontalScrollBar()->setRange(0, qFloor(image()->width() * zoom()) - viewport()->width());
         verticalScrollBar()->setRange(0, qFloor(image()->height() * zoom()) - viewport()->height());
     }
+    else
+    {
+        horizontalScrollBar()->setRange(0, 0);
+        verticalScrollBar()->setRange(0, 0);
+    }
 }
 
 void ImageView::paintEvent(QPaintEvent *e)
@@ -115,10 +120,11 @@ void ImageView::paintEvent(QPaintEvent *e)
 
     if (image())
     {
-        QRect s_rect(qFloor(horizontalScrollBar()->value() / zoom()),
-                     qFloor(verticalScrollBar()->value() / zoom()),
-                     qFloor(e->rect().width() / zoom()),
-                     qFloor(e->rect().height() / zoom()));
+        QRect s_rect = e->rect();
+
+        s_rect.moveTopLeft(QPoint(qFloor(horizontalScrollBar()->value() / zoom()),
+                                  qFloor(verticalScrollBar()->value() / zoom())));
+        s_rect.setSize(s_rect.size() / zoom());
 
         QRect d_rect = e->rect();
 
