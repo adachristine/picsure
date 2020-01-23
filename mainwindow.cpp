@@ -160,6 +160,10 @@ void MainWindow::setCurrentPath(const QString &path)
         m_currentpath = path;
         m_view->setImage(i);
     }
+    else
+    {
+        delete i;
+    }
 }
 
 bool MainWindow::pathIsImage(const QString &path)
