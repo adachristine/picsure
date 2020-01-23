@@ -54,10 +54,10 @@ ImageView::ZoomHint ImageView::zoomHint() const
     return m_zoomhint;
 }
 
-void ImageView::setImage(const QImage *i)
+void ImageView::setImage(QImage *i)
 {
     delete m_image;
-    m_image = const_cast<QImage *>(i);
+    m_image = i;
     horizontalScrollBar()->setValue(0);
     verticalScrollBar()->setValue(0);
     m_updateScrollBars();

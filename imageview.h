@@ -43,7 +43,7 @@ public:
 
 public slots:
     void setZoom(qreal z);
-    void setImage(const QImage *i);
+    void setImage(QImage *i);
     void setZoomHint(ZoomHint h);
 
 signals:
