@@ -1,3 +1,19 @@
+//picsure: a simple image viewer
+//Copyright (C) 2020 Ada Putnam
+
+//This program is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+//along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #include "imageview.h"
 #include <QPainter>
 #include <QPaintEvent>
@@ -42,9 +58,9 @@ void ImageView::setImage(const QImage *i)
 {
     delete m_image;
     m_image = const_cast<QImage *>(i);
-    m_updateScrollBars();
     horizontalScrollBar()->setValue(0);
     verticalScrollBar()->setValue(0);
+    m_updateScrollBars();
     viewport()->update();
     emit imageChanged(m_image);
 }
@@ -137,7 +153,7 @@ void ImageView::paintEvent(QPaintEvent *e)
 
     QAbstractScrollArea::paintEvent(e);
 
-    p.fillRect(e->rect(), Qt::gray);
+    p.fillRect(e->rect(), Qt::black);
 
     if (image())
     {
@@ -149,13 +165,16 @@ void ImageView::paintEvent(QPaintEvent *e)
 
         QRect d_rect = e->rect();
 
-        if (d_rect.width() - (image()->width() * zoom()) > 0)
+        auto d_width_diff = d_rect.width() - image()->width() * zoom();
+        auto d_height_diff = d_rect.height() - image()->height() * zoom();
+
+        if (d_width_diff > 0)
         {
-            d_rect.moveLeft((d_rect.width() - qFloor(image()->width() * zoom()))/2);
+            d_rect.moveLeft(qFloor(d_width_diff/2));
         }
-        if (d_rect.height() - image()->height() * zoom() > 0)
+        if (d_height_diff > 0)
         {
-            d_rect.moveTop((d_rect.height() - qFloor(image()->height() * zoom()))/2);
+            d_rect.moveTop(qFloor(d_height_diff/2));
         }
 
         p.drawImage(d_rect, *image(), s_rect);

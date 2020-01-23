@@ -1,0 +1,7 @@
+picsure - a simple, lightweight image viewer
+Copyright (C)2020 Ada Putnam
+All rights reserved.
+
+This application uses the Qt Application Framework and is intended for desktop
+platforms supported by the framework. Please consult the Qt documentation for
+instructions on how to build this application for your platform.

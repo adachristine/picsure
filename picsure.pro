@@ -37,3 +37,12 @@ HEADERS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+VERSION = 0.0.1
+QMAKE_TARGET_COMPANY = "Adasoft"
+QMAKE_TARGET_PRODUCT = "Picsure"
+QMAKE_TARGET_DESCRIPTION = "Simple image viewer for Windows"
+
+DISTFILES += \
+    COPYING \
+    README
