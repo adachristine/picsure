@@ -39,7 +39,7 @@ ImageView::~ImageView()
     delete m_resizetimer;
 }
 
-const QImage *ImageView::image() const
+QImage *ImageView::image() const
 {
     return m_image;
 }

@@ -25,7 +25,7 @@ class QTimer;
 class ImageView : public QAbstractScrollArea
 {
     Q_OBJECT
-    Q_PROPERTY(const QImage *image READ image WRITE setImage NOTIFY imageChanged)
+    Q_PROPERTY(QImage *image READ image WRITE setImage NOTIFY imageChanged)
     Q_PROPERTY(qreal zoom READ zoom WRITE setZoom NOTIFY zoomChanged)
     Q_PROPERTY(ZoomHint zoomHint READ zoomHint WRITE setZoomHint NOTIFY zoomHintChanged)
 
@@ -37,7 +37,7 @@ public:
     ImageView(QWidget *p, QImage *image);
     ~ImageView();
 
-    const QImage *image() const;
+    QImage *image() const;
     qreal zoom() const;
     ZoomHint zoomHint() const;
 
